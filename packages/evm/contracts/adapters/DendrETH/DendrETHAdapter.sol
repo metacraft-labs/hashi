@@ -11,6 +11,7 @@ contract DendrETHAdapter is BlockHashAdapter {
 
     error InvalidUpdate();
     error BlockHeaderNotAvailable(uint256 slot);
+    error InvalidSlot();
     error InvalidBlockNumberProof();
     error InvalidBlockHashProof();
 
@@ -22,11 +23,14 @@ contract DendrETHAdapter is BlockHashAdapter {
     /// @notice Stores the block header for a given block only if it exists
     //          in the DendrETH Light Client for the SOURCE_CHAIN_ID.
     function storeBlockHeader(
-        uint64 slot,
-        uint256 blockNumber,
-        bytes32[] calldata blockNumberProof,
-        bytes32 blockHash,
-        bytes32[] calldata blockHashProof
+        uint32 _chainId,
+        uint64 _slot,
+        bytes32[] calldata _slotProof,
+        bytes32 _finalizedBlockHeader,
+        uint256 _blockNumber,
+        bytes32[] calldata _blockNumberProof,
+        bytes32 _blockHash,
+        bytes32[] calldata _blockHashProof
     ) external {
         ILightClient lightClient = ILightClient(DENDRETH);
 
@@ -35,7 +39,7 @@ contract DendrETHAdapter is BlockHashAdapter {
         bool found = false;
 
         do {
-            if (slot == lightClient.optimisticSlots(i)) {
+            if (_finalizedBlockHeader == lightClient.finalizedHeaders(i)) {
                 found = true;
                 break;
             }
@@ -49,13 +53,15 @@ contract DendrETHAdapter is BlockHashAdapter {
             revert BlockHeaderNotAvailable(slot);
         }
 
-        bytes32 blockHeaderRoot = lightClient.optimisticHeaders(i);
+        if (!SSZ.verifySlot(_slot, _slotProof, _finalizedBlockHeader)) {
+            revert InvalidSlot();
+        }
 
-        if (!SSZ.verifyBlockNumber(blockNumber, blockNumberProof, blockHeaderRoot)) {
+        if (!SSZ.verifyBlockNumber(_blockNumber, _blockNumberProof, _finalizedBlockHeader)) {
             revert InvalidBlockNumberProof();
         }
 
-        if (!SSZ.verifyBlockHash(blockHash, blockHashProof, blockHeaderRoot)) {
+        if (!SSZ.verifyBlockHash(_blockHash, _blockHashProof, _finalizedBlockHeader)) {
             revert InvalidBlockHashProof();
         }
 
@@ -65,28 +71,30 @@ contract DendrETHAdapter is BlockHashAdapter {
     /// @notice Updates DendrETH Light client and stores the given block
     //          for the update
     function storeBlockHeader(
-        uint64 slot,
-        uint256 blockNumber,
-        bytes32[] calldata blockNumberProof,
-        bytes32 blockHash,
-        bytes32[] calldata blockHashProof,
+        uint32 _chainId,
+        uint64 _slot,
+        bytes32[] calldata _slotProof,
+        uint256 _blockNumber,
+        bytes32[] calldata _blockNumberProof,
+        bytes32 _blockHash,
+        bytes32[] calldata _blockHashProof,
         LightClientUpdate calldata update
     ) external {
         ILightClient lightClient = ILightClient(DENDRETH);
 
         lightClient.light_client_update(update);
 
-        if (lightClient.optimisticHeaderSlot() != slot) {
+        bytes32 finalizedHeaderRoot = lightClient.finalizedHeaderRoot();
+
+        if (!SSZ.verifySlot(_slot, _slotProof, finalizedHeaderRoot)) {
             revert InvalidUpdate();
         }
 
-        bytes32 blockHeaderRoot = lightClient.optimisticHeaderRoot();
-
-        if (!SSZ.verifyBlockNumber(blockNumber, blockNumberProof, blockHeaderRoot)) {
+        if (!SSZ.verifyBlockNumber(_blockNumber, _blockNumberProof, finalizedHeaderRoot)) {
             revert InvalidBlockNumberProof();
         }
 
-        if (!SSZ.verifyBlockHash(blockHash, blockHashProof, blockHeaderRoot)) {
+        if (!SSZ.verifyBlockHash(_blockHash, _blockHashProof, finalizedHeaderRoot)) {
             revert InvalidBlockHashProof();
         }
 
