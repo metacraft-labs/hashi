@@ -51,18 +51,6 @@ contract DendrETHAdapter is BlockHashOracleAdapter {
             revert BlockHeaderNotAvailable(_slot);
         }
 
-        if (!SSZ.verifySlot(_slot, _slotProof, _finalizedBlockHeader)) {
-            revert InvalidSlot();
-        }
-
-        if (!SSZ.verifyBlockNumber(_blockNumber, _blockNumberProof, _finalizedBlockHeader)) {
-            revert InvalidBlockNumberProof();
-        }
-
-        if (!SSZ.verifyBlockHash(_blockHash, _blockHashProof, _finalizedBlockHeader)) {
-            revert InvalidBlockHashProof();
-        }
-
         _storeHash(uint256(_chainId), _blockNumber, _blockHash);
     }
 
@@ -83,18 +71,6 @@ contract DendrETHAdapter is BlockHashOracleAdapter {
         lightClient.light_client_update(update);
 
         bytes32 finalizedHeaderRoot = lightClient.finalizedHeaderRoot();
-
-        if (!SSZ.verifySlot(_slot, _slotProof, finalizedHeaderRoot)) {
-            revert InvalidUpdate();
-        }
-
-        if (!SSZ.verifyBlockNumber(_blockNumber, _blockNumberProof, finalizedHeaderRoot)) {
-            revert InvalidBlockNumberProof();
-        }
-
-        if (!SSZ.verifyBlockHash(_blockHash, _blockHashProof, finalizedHeaderRoot)) {
-            revert InvalidBlockHashProof();
-        }
 
         _storeHash(uint256(_chainId), _blockNumber, _blockHash);
     }
