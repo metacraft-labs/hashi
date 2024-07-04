@@ -12,7 +12,7 @@ task("deploy:DendrETH")
     const signers: SignerWithAddress[] = await hre.ethers.getSigners()
     const DendrETHAdapter = await hre.ethers.getContractFactory("DendrETHAdapter")
     const constructorArguments = [taskArguments.lightclient] as const
-    const dendrethAdapter = await DendrETHAdapter.connect(signers[1]).deploy(...constructorArguments)
+    const dendrethAdapter = await DendrETHAdapter.connect(signers[0]).deploy(...constructorArguments)
     await dendrethAdapter.deployed()
     console.log("DendrETH adapter deployed to:", dendrethAdapter.address)
     if (taskArguments.verify) await verify(hre, dendrethAdapter, constructorArguments)
