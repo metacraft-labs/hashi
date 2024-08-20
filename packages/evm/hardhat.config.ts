@@ -57,6 +57,9 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
       case "chiado":
         jsonRpcUrl = "https://rpc.chiadochain.net/"
         break
+      case "sepolia":
+        jsonRpcUrl = "https://eth-sepolia.g.alchemy.com/v2/CQd8BYX63I75UnEaAa6-F5hlRkfheHB6"
+        break
       default:
         jsonRpcUrl = `https://${chain}.infura.io/v3/${infuraApiKey}`
     }
