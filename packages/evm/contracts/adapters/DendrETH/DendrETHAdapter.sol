@@ -32,18 +32,6 @@ contract DendrETHAdapter is BlockHashAdapter {
         bytes32 _blockHash,
         bytes32[] calldata _blockHashProof
     ) external {
-        if (!SSZ.verifySlot(_slot, _slotProof, _finalizedBlockHeader)) {
-            revert InvalidSlot();
-        }
-
-        if (!SSZ.verifyBlockNumber(_blockNumber, _blockNumberProof, _finalizedBlockHeader)) {
-            revert InvalidBlockNumberProof();
-        }
-
-        if (!SSZ.verifyBlockHash(_blockHash, _blockHashProof, _finalizedBlockHeader)) {
-            revert InvalidBlockHashProof();
-        }
-
         ILightClient lightClient = ILightClient(DENDRETH);
 
         uint256 currentIndex = lightClient.currentIndex();
@@ -63,6 +51,18 @@ contract DendrETHAdapter is BlockHashAdapter {
 
         if (!found) {
             revert BlockHeaderNotAvailable(_slot);
+        }
+
+        if (!SSZ.verifySlot(_slot, _slotProof, _finalizedBlockHeader)) {
+            revert InvalidSlot();
+        }
+
+        if (!SSZ.verifyBlockNumber(_blockNumber, _blockNumberProof, _finalizedBlockHeader)) {
+            revert InvalidBlockNumberProof();
+        }
+
+        if (!SSZ.verifyBlockHash(_blockHash, _blockHashProof, _finalizedBlockHeader)) {
+            revert InvalidBlockHashProof();
         }
 
         _storeHash(SOURCE_CHAIN_ID, _blockNumber, _blockHash);
