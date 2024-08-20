@@ -96,8 +96,8 @@ contract DendrETHAdapter is BlockHashAdapter {
             revert InvalidBlockHashProof();
         }
 
-        lightClient.light_client_update(update);
-
         _storeHash(SOURCE_CHAIN_ID, _blockNumber, _blockHash);
+
+        lightClient.light_client_update(update);
     }
 }
